@@ -1,7 +1,7 @@
 # ReadRise — Roadmap & Phase Plan
 
 **Last updated:** 2026-02-21
-**Status:** Phase 0 In Progress
+**Status:** Phase 1 In Progress
 
 ---
 
@@ -9,8 +9,8 @@
 
 | Phase | Name | Goal | Status |
 |-------|------|------|--------|
-| 0 | Foundation | Architecture, tooling, dev environment | In Progress |
-| 1 | MVP Core | Ship closed beta with critical user journey | Not Started |
+| 0 | Foundation | Architecture, tooling, dev environment | Complete |
+| 1 | MVP Core | Ship closed beta with critical user journey | In Progress |
 | 2 | Polish & Launch | Public launch, monetization, iOS App Store | Not Started |
 | 3 | Growth | Social features, Android, recommendations | Not Started |
 | 4 | Scale | Advanced analytics, API, integrations | Not Started |
@@ -24,12 +24,12 @@
 ### Deliverables
 - [x] Tech stack decisions documented
 - [x] Repository structure established (Turborepo monorepo for web; separate repo planned for iOS)
-- [ ] Local dev environment working (web + iOS) — web ready; iOS repo not yet created
+- [x] Local dev environment working (web + iOS)
 - [x] Database schema v1 designed and reviewed (Drizzle schema in `packages/db`)
 - [x] Auth system wired up (Supabase Auth, middleware, server/client helpers, OAuth callback)
 - [x] CI/CD pipeline configured (GitHub Actions: lint, typecheck, build)
-- [ ] Staging environment running — needs Supabase project + Vercel deploy
-- [ ] Google Books API integration tested
+- [x] Staging environment running (Supabase project + Vercel deploy)
+- [x] Google Books API key provisioned
 - [x] Design system / component library selected (shadcn/ui + Tailwind v4)
 - [x] Error tracking configured (Sentry server + client instrumentation files)
 

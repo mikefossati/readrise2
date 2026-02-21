@@ -21,7 +21,7 @@
 
 ## Current Phase
 
-**Phase 0 — Foundation** (In Progress)
+**Phase 1 — MVP Core** (In Progress)
 
 See [03-roadmap.md](03-roadmap.md) for detailed phase checklists.
 
