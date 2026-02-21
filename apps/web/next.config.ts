@@ -17,7 +17,6 @@ export default withSentryConfig(nextConfig, {
   // Only upload source maps in CI to avoid slowing down local builds
   silent: !process.env.CI,
   widenClientFileUpload: true,
-  hideSourceMaps: true,
   disableLogger: true,
   automaticVercelMonitors: true,
 })

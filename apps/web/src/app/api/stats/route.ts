@@ -12,38 +12,43 @@ export async function GET() {
   const yearStart = `${thisYear}-01-01`
 
   // Books finished this year
-  const [{ count: booksThisYear }] = await db
+  const booksThisYear = (await db
     .select({ count: sql<number>`count(*)::int` })
     .from(userBooks)
     .where(and(eq(userBooks.userId, userId), eq(userBooks.shelf, 'finished'), gte(userBooks.finishedAt, yearStart)))
+  )[0]?.count ?? 0
 
-  // Total pages read (all time) — from progress entries
-  const [{ total: totalPagesAllTime }] = await db
+  // Total pages read (all time)
+  const totalPagesAllTime = (await db
     .select({ total: sql<number>`coalesce(sum(pages_read), 0)::int` })
     .from(readingSessions)
     .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
     .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.pagesRead)))
+  )[0]?.total ?? 0
 
   // Total pages this year
-  const [{ total: totalPagesThisYear }] = await db
+  const totalPagesThisYear = (await db
     .select({ total: sql<number>`coalesce(sum(pages_read), 0)::int` })
     .from(readingSessions)
     .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
     .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.pagesRead), gte(readingSessions.startedAt, new Date(yearStart))))
+  )[0]?.total ?? 0
 
   // Total hours read (all time)
-  const [{ total: totalSecondsAllTime }] = await db
+  const totalSecondsAllTime = (await db
     .select({ total: sql<number>`coalesce(sum(duration_seconds), 0)::int` })
     .from(readingSessions)
     .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
     .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.durationSeconds)))
+  )[0]?.total ?? 0
 
   // Average pages per hour
-  const [{ avg: avgPagesPerHour }] = await db
+  const avgPagesPerHour = (await db
     .select({ avg: sql<number>`avg(pages_per_hour)` })
     .from(readingSessions)
     .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
     .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.pagesPerHour)))
+  )[0]?.avg ?? null
 
   // Genre breakdown (from finished books)
   const genreRows = await db

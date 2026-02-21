@@ -43,10 +43,10 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
   const { volume, shelf, format } = parsed.data
-  const bookData = volumeToBookData(volume as GoogleBooksVolume)
+  const bookData = volumeToBookData(volume as unknown as GoogleBooksVolume)
 
   // Upsert the canonical book record
-  const [book] = await db
+  const insertedBook = await db
     .insert(books)
     .values(bookData)
     .onConflictDoUpdate({
@@ -58,6 +58,9 @@ export async function POST(request: Request) {
       },
     })
     .returning()
+
+  const book = insertedBook[0]
+  if (!book) return NextResponse.json({ error: 'Failed to insert book' }, { status: 500 })
 
   // Check if user already has this book (any reread)
   const existing = await db
