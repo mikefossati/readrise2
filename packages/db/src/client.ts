@@ -25,10 +25,19 @@ declare global {
   var __db: ReturnType<typeof createClient> | undefined
 }
 
-export const db = globalThis.__db ?? createClient()
-
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.__db = db
+function getDb() {
+  if (!globalThis.__db) {
+    globalThis.__db = createClient()
+  }
+  return globalThis.__db
 }
+
+// Lazy proxy — createClient() is deferred until the first query, so importing
+// this module during `next build` (without DATABASE_URL) doesn't throw.
+export const db = new Proxy({} as ReturnType<typeof createClient>, {
+  get(_target, prop) {
+    return Reflect.get(getDb(), prop as string)
+  },
+})
 
 export type Db = typeof db
