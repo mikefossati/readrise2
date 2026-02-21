@@ -14,8 +14,9 @@
 | 04 | [User Journeys](04-user-journeys.md) | Critical flows, edge cases | Done |
 | 05 | [Data Model](05-data-model.md) | Entity definitions, relationships, Goodreads import mapping | Draft |
 | 06 | [Tech Stack](06-tech-stack.md) | Chosen technologies and rationale | Done |
-| 07 | [API Design](07-api-design.md) | REST/GraphQL endpoints | Not Started |
-| 08 | [UI/UX Guidelines](08-ui-ux.md) | Design system, screens, component inventory | Not Started |
+| 07 | [Testing Strategy](07-testing-strategy.md) | Test pyramid, tooling, CI integration, coverage policy | Done |
+| 08 | [API Design](08-api-design.md) | REST/GraphQL endpoints | Not Started |
+| 09 | [UI/UX Guidelines](09-ui-ux.md) | Design system, screens, component inventory | Not Started |
 
 ---
 
@@ -35,3 +36,4 @@ See [03-roadmap.md](03-roadmap.md) for detailed phase checklists.
 | 2026-02-21 | Social features deferred to Phase 3 |
 | 2026-02-21 | Launch free tier first, gate later |
 | 2026-02-21 | Goodreads import is P0 |
+| 2026-02-21 | All new features require tests — non-negotiable (see 07-testing-strategy.md) |
