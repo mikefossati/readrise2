@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { db, userBooks, books, progressEntries, readingSessions, reviews, users } from '@readrise/db'
-import { eq, and, desc, isNull } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 import { redirect, notFound } from 'next/navigation'
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'

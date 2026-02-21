@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { db, userBooks, books, readingSessions, progressEntries } from '@readrise/db'
+import { db, userBooks, books, readingSessions } from '@readrise/db'
 import { eq, and, gte, sql, isNotNull } from 'drizzle-orm'
 import { getAuthenticatedUser } from '@/lib/api-helpers'
 

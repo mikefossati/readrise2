@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { db, books, userBooks } from '@readrise/db'
-import { eq, and } from 'drizzle-orm'
 import { getAuthenticatedUser } from '@/lib/api-helpers'
 import { getBookByIsbn, searchBooks, volumeToBookData } from '@/lib/google-books'
 

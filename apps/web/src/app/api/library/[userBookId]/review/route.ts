@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 // GET /api/library/[userBookId]/review
 export async function GET(_req: Request, { params }: { params: Promise<{ userBookId: string }> }) {
-  const { dbUser, error } = await getAuthenticatedUser()
+  const { error } = await getAuthenticatedUser()
   if (error) return error
   const { userBookId } = await params
 

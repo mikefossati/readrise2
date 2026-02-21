@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { db, userBooks, books, progressEntries, reviews } from '@readrise/db'
-import { eq, and, desc } from 'drizzle-orm'
+import { eq, desc } from 'drizzle-orm'
 import { users } from '@readrise/db'
 import { redirect } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'

@@ -31,7 +31,7 @@ export function SessionTimer({
 
   // Tick
   useEffect(() => {
-    if (!startTime) { setElapsed(0); return }
+    if (!startTime) return
     const tick = () => setElapsed(Math.floor((Date.now() - startTime.getTime()) / 1000))
     tick()
     const id = setInterval(tick, 1000)
