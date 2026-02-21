@@ -15,6 +15,7 @@ export function BookSearch() {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<GoogleBooksVolume[]>([])
+  const [searchError, setSearchError] = useState<string | null>(null)
   const [searching, setSearching] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
@@ -29,6 +30,7 @@ export function BookSearch() {
     }
 
     setSearching(true)
+    setSearchError(null)
 
     const timer = setTimeout(async () => {
       abortRef.current?.abort()
@@ -39,9 +41,17 @@ export function BookSearch() {
           signal: abortRef.current.signal,
         })
         const json = await res.json()
-        setResults(json.data ?? [])
+        if (!res.ok) {
+          setSearchError(json.error ?? `Search failed (${res.status})`)
+          setResults([])
+        } else {
+          setResults(json.data ?? [])
+        }
       } catch (err: unknown) {
-        if (err instanceof Error && err.name !== 'AbortError') setResults([])
+        if (err instanceof Error && err.name !== 'AbortError') {
+          setSearchError('Search failed — check your connection')
+          setResults([])
+        }
       } finally {
         setSearching(false)
       }
@@ -56,6 +66,7 @@ export function BookSearch() {
     if (!v) {
       setQuery('')
       setResults([])
+      setSearchError(null)
       abortRef.current?.abort()
     }
   }
@@ -112,7 +123,10 @@ export function BookSearch() {
               disabled={isPending}
             />
           ))}
-          {!searching && query.trim().length >= 2 && results.length === 0 && (
+          {!searching && searchError && (
+            <p className="py-4 text-center text-sm text-destructive">{searchError}</p>
+          )}
+          {!searching && !searchError && query.trim().length >= 2 && results.length === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">No results found</p>
           )}
         </div>

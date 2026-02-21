@@ -10,11 +10,12 @@ export async function searchBooks(query: string, maxResults = 10): Promise<Googl
     ...(process.env.GOOGLE_BOOKS_API_KEY && { key: process.env.GOOGLE_BOOKS_API_KEY }),
   })
 
-  const res = await fetch(`${BASE_URL}/volumes?${params}`, {
-    next: { revalidate: 3600 }, // cache for 1 hour
-  })
+  const res = await fetch(`${BASE_URL}/volumes?${params}`, { cache: 'no-store' })
 
-  if (!res.ok) return []
+  if (!res.ok) {
+    console.error('[google-books] search failed', res.status, await res.text())
+    return []
+  }
 
   const data = await res.json()
   return (data.items ?? []) as GoogleBooksVolume[]
