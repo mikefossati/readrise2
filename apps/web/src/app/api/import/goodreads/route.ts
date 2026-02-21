@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db, books, userBooks } from '@readrise/db'
 import { getAuthenticatedUser } from '@/lib/api-helpers'
 import { getBookByIsbn, searchBooks, volumeToBookData } from '@/lib/google-books'
+import { mapShelf } from '@/lib/shelf'
 
 interface GoodreadsRow {
   'Title': string
@@ -16,15 +17,6 @@ interface GoodreadsRow {
   'My Review': string
   'Number of Pages': string
   'Read Count': string
-}
-
-function mapShelf(exclusiveShelf: string): 'reading' | 'want_to_read' | 'finished' | 'abandoned' {
-  switch (exclusiveShelf?.toLowerCase()) {
-    case 'read': return 'finished'
-    case 'currently-reading': return 'reading'
-    case 'to-read': return 'want_to_read'
-    default: return 'want_to_read'
-  }
 }
 
 // POST /api/import/goodreads — expects JSON array of Goodreads CSV rows

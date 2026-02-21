@@ -1,0 +1,17 @@
+services:
+  postgres-test:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: readrise_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5433:5432'
+    # Use tmpfs so the DB lives in RAM — fast startup and auto-wiped on container stop
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5

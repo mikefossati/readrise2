@@ -38,6 +38,153 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+  test-unit-component:
+    name: Unit & Component Tests
+    runs-on: ubuntu-latest
+    needs: ci
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+      NEXT_PUBLIC_APP_URL: https://placeholder.readrise.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Unit tests
+        run: pnpm --filter @readrise/web test:unit
+
+      - name: Component tests
+        run: pnpm --filter @readrise/web test:components
+
+  test-integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: ci
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: readrise_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/readrise_test
+      NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+      NEXT_PUBLIC_APP_URL: https://placeholder.readrise.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply schema to test DB
+        run: pnpm --filter @readrise/db db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/readrise_test
+
+      - name: Integration tests
+        run: pnpm --filter @readrise/web test:integration
+
+  test-e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [test-unit-component, test-integration]
+    # Skips gracefully when Supabase E2E secrets are not configured.
+    # The auth.setup.ts step throws a clear error if E2E_TEST_EMAIL is missing.
+    if: ${{ vars.E2E_ENABLED == 'true' }}
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: readrise_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/readrise_test
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      NEXT_PUBLIC_APP_URL: https://placeholder.readrise.app
+      E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+      E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Apply schema to test DB
+        run: pnpm --filter @readrise/db db:push
+
+      - name: Build app
+        run: pnpm --filter @readrise/web build
+
+      - name: Run E2E tests
+        run: pnpm --filter @readrise/web test:e2e
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7
+
   build:
     name: Build
     runs-on: ubuntu-latest

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { db, userBooks, books, readingSessions } from '@readrise/db'
 import { eq, and, gte, sql, isNotNull } from 'drizzle-orm'
 import { getAuthenticatedUser } from '@/lib/api-helpers'
+import { calculateStreak } from '@/lib/streak'
 
 export async function GET() {
   const { dbUser, error } = await getAuthenticatedUser()
@@ -79,25 +80,7 @@ export async function GET() {
     .limit(365)
 
   const days = sessionDays.map((r) => r.day).filter(Boolean) as string[]
-  let currentStreak = 0
-  let longestStreak = 0
-  let streak = 0
-  const today = new Date().toISOString().split('T')[0]!
-
-  for (let i = 0; i < days.length; i++) {
-    const expected = new Date(today)
-    expected.setDate(expected.getDate() - i)
-    const expectedStr = expected.toISOString().split('T')[0]!
-    if (days[i] === expectedStr) {
-      streak++
-      if (i === 0 || i === 1) currentStreak = streak
-    } else {
-      if (streak > longestStreak) longestStreak = streak
-      streak = 1
-      if (i > 1 && currentStreak === 0) break
-    }
-  }
-  if (streak > longestStreak) longestStreak = streak
+  const { currentStreak, longestStreak } = calculateStreak(days)
 
   return NextResponse.json({
     data: {
