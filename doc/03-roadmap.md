@@ -1,7 +1,7 @@
 # ReadRise — Roadmap & Phase Plan
 
 **Last updated:** 2026-02-21
-**Status:** Phase 1 In Progress
+**Status:** Phase 1 Complete (web) — Phase 1.5 iOS pending
 
 ---
 
@@ -10,7 +10,7 @@
 | Phase | Name | Goal | Status |
 |-------|------|------|--------|
 | 0 | Foundation | Architecture, tooling, dev environment | Complete |
-| 1 | MVP Core | Ship closed beta with critical user journey | In Progress |
+| 1 | MVP Core | Ship closed beta with critical user journey | Web Complete / iOS Pending |
 | 2 | Polish & Launch | Public launch, monetization, iOS App Store | Not Started |
 | 3 | Growth | Social features, Android, recommendations | Not Started |
 | 4 | Scale | Advanced analytics, API, integrations | Not Started |
@@ -41,29 +41,29 @@
 
 **Goal:** Complete the critical user journey. Ready for closed beta.
 
-### Milestone 1.1 — Library
-- [ ] Book search (Google Books API)
-- [ ] Add book to shelf
-- [ ] Shelf views (Reading, Want to Read, Finished, Abandoned)
-- [ ] Book detail page
-- [ ] Goodreads CSV import
+### Milestone 1.1 — Library ✅
+- [x] Book search (Google Books API)
+- [x] Add book to shelf
+- [x] Shelf views (Reading, Want to Read, Finished, Abandoned)
+- [x] Book detail page
+- [x] Goodreads CSV import
 
-### Milestone 1.2 — Reading Activity
-- [ ] Progress logging (page / percentage)
-- [ ] Session timer (start/stop)
-- [ ] Pages-per-hour calculation
-- [ ] Mark book as Finished
-- [ ] Mark book as Abandoned
+### Milestone 1.2 — Reading Activity ✅
+- [x] Progress logging (page / percentage)
+- [x] Session timer (start/stop)
+- [x] Pages-per-hour calculation
+- [x] Mark book as Finished
+- [x] Mark book as Abandoned
 
-### Milestone 1.3 — Enrichment
-- [ ] 1–5 star rating
-- [ ] Private review / notes
-- [ ] Manual start/finish date entry
-- [ ] Re-read support
+### Milestone 1.3 — Enrichment ✅
+- [x] 1–5 star rating
+- [x] Private review / notes
+- [x] Manual start/finish date entry
+- [x] Re-read support
 
-### Milestone 1.4 — Stats & Goals
-- [ ] Stats dashboard (books read, pages, hours, speed, streak, genre)
-- [ ] Annual book goal with progress bar
+### Milestone 1.4 — Stats & Goals ✅
+- [x] Stats dashboard (books read, pages, hours, speed, streak, genre)
+- [x] Annual book goal with progress bar
 
 ### Milestone 1.5 — iOS
 - [ ] iOS app feature parity with web (milestones 1.1–1.4)
