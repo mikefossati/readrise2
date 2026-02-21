@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import { Search, Plus, Loader2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import type { GoogleBooksVolume } from '@readrise/types'
@@ -19,17 +18,45 @@ export function BookSearch() {
   const [searching, setSearching] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const abortRef = useRef<AbortController | null>(null)
 
-  async function handleSearch(q: string) {
-    setQuery(q)
-    if (q.trim().length < 2) { setResults([]); return }
-    setSearching(true)
-    try {
-      const res = await fetch(`/api/books/search?q=${encodeURIComponent(q)}`)
-      const json = await res.json()
-      setResults(json.data ?? [])
-    } finally {
+  // Debounce + abort: wait 350ms after typing stops, cancel any in-flight request
+  useEffect(() => {
+    if (query.trim().length < 2) {
+      setResults([])
       setSearching(false)
+      return
+    }
+
+    setSearching(true)
+
+    const timer = setTimeout(async () => {
+      abortRef.current?.abort()
+      abortRef.current = new AbortController()
+
+      try {
+        const res = await fetch(`/api/books/search?q=${encodeURIComponent(query.trim())}`, {
+          signal: abortRef.current.signal,
+        })
+        const json = await res.json()
+        setResults(json.data ?? [])
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== 'AbortError') setResults([])
+      } finally {
+        setSearching(false)
+      }
+    }, 350)
+
+    return () => clearTimeout(timer)
+  }, [query])
+
+  // Reset state when dialog closes
+  function handleOpenChange(v: boolean) {
+    setOpen(v)
+    if (!v) {
+      setQuery('')
+      setResults([])
+      abortRef.current?.abort()
     }
   }
 
@@ -42,7 +69,7 @@ export function BookSearch() {
       })
       if (res.ok) {
         toast.success(`Added to ${shelf.replace('_', ' ')}`)
-        setOpen(false)
+        handleOpenChange(false)
         router.refresh()
       } else {
         toast.error('Failed to add book')
@@ -51,7 +78,7 @@ export function BookSearch() {
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="mr-1 h-4 w-4" /> Add book
@@ -67,7 +94,7 @@ export function BookSearch() {
             className="pl-8"
             placeholder="Search by title or author…"
             value={query}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
             autoFocus
           />
         </div>
@@ -85,7 +112,7 @@ export function BookSearch() {
               disabled={isPending}
             />
           ))}
-          {!searching && query.length >= 2 && results.length === 0 && (
+          {!searching && query.trim().length >= 2 && results.length === 0 && (
             <p className="py-4 text-center text-sm text-muted-foreground">No results found</p>
           )}
         </div>
