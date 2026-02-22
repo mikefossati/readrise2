@@ -78,20 +78,27 @@
 
 **Goal:** Public launch. Monetization live. App Store approved.
 
-### Deliverables (Web)
-- [x] Onboarding flow (welcome + name → add first book / Goodreads import → set goal → done)
-- [x] Empty states and loading states polished (skeletons, first-run dashboard card)
-- [ ] Responsive design tested across devices
-- [x] Monetization tiers implemented (Free / Reader / Bibliophile)
-- [x] Stripe payment integration (checkout, billing portal, webhook handler)
-- [x] Feature gating per tier (50-book hard limit for Free, upsell dialog)
-- [ ] iOS App Store submission and approval
-- [x] Marketing landing page (hero, features, pricing, footer)
-- [x] Privacy policy and terms of service pages
-- [x] Basic email notifications (welcome email on sign-up, weekly summary endpoint)
-- [ ] Support channel established
+### Deliverables — Web ✅ (shipped 2026-02-21)
+- [x] Marketing landing page (hero, features strip, pricing table, footer)
+- [x] Onboarding wizard (welcome + name → add first book / Goodreads import → set goal → done)
+- [x] Dashboard layout guard: redirect to `/onboarding` if `onboardingCompletedAt` is null
+- [x] Auth callback: DB user upsert + welcome email on first sign-in
+- [x] Monetization tiers (Free / Reader / Bibliophile) — `features.ts`, `PricingTable`
+- [x] Stripe integration — checkout session, billing portal, webhook handler (test mode)
+- [x] Billing page — current plan badge + upgrade / manage subscription CTAs
+- [x] Sidebar — Billing nav link + "Upgrade" badge for free users
+- [x] Feature gating — 50-book hard limit for Free tier with `UpgradeDialog` upsell
+- [x] Email notifications — welcome on sign-up + weekly summary cron endpoint (Resend)
+- [x] Empty states polished — per-shelf copy; dashboard `loading.tsx`; book detail `loading.tsx`
+- [x] Privacy policy page
+- [x] Terms of service page
+- [ ] Responsive design QA across devices (manual, pre-launch)
+- [ ] Support channel established (operational)
 
-**Exit criteria (Web — met):** Web app is publicly launchable. Stripe monetization live in test mode. Onboarding, feature gating, email, privacy/terms all shipped.
+### Deliverables — iOS
+- [ ] iOS App Store submission and approval (blocked on Phase 1.5)
+
+**Exit criteria (Web — met):** All code deliverables shipped. Stripe keys are test-mode; swap to live before public launch. Remaining items are non-code operational tasks.
 **Exit criteria (iOS — pending):** App Store submission and approval.
 
 ---
