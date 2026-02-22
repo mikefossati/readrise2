@@ -1,7 +1,7 @@
 # ReadRise — Roadmap & Phase Plan
 
 **Last updated:** 2026-02-22
-**Status:** Phase 2 Complete (web) — Phase 1.5 iOS pending
+**Status:** Phase 2.5 Planned — Phase 2 Web Complete — Phase 1.5 iOS Pending
 
 ---
 
@@ -12,6 +12,7 @@
 | 0 | Foundation | Architecture, tooling, dev environment | Complete |
 | 1 | MVP Core | Ship closed beta with critical user journey | Web Complete / iOS Pending |
 | 2 | Polish & Launch | Public launch, monetization, iOS App Store | Web Complete / iOS Pending |
+| 2.5 | UX/UI Redesign | Warm palette, streak hero, young adult positioning | Planned |
 | 3 | Growth | Social features, Android, recommendations | Not Started |
 | 4 | Scale | Advanced analytics, API, integrations | Not Started |
 
@@ -103,6 +104,40 @@
 
 ---
 
+## Phase 2.5 — UX/UI Redesign
+
+**Goal:** Reposition ReadRise visually for a young adult audience. No new features — pure design uplift to increase conversion and retention before Phase 3 growth work begins.
+
+**Full specification:** `doc/08-ux-redesign-phase2.5.md`
+
+### Milestone 2.5-A — Design System Foundation
+- [ ] Add Fraunces (serif) via `next/font/google` for display headings
+- [ ] Update CSS variables with warm palette (ink, parchment, amber, sage)
+- [ ] Sidebar → slim 64px icon rail with streak counter pinned at bottom
+
+### Milestone 2.5-B — Dashboard & Library (highest impact)
+- [ ] Dashboard: streak hero card (amber-tinted, full width) + compact stat row + currently-reading card + recent sessions list
+- [ ] Library: "Now Reading" featured band above shelf tabs; larger cover grid (128px)
+
+### Milestone 2.5-C — Book Detail & Goals
+- [ ] Book detail: parchment header, session card promoted to primary action zone
+- [ ] Goals: pace indicator sentence + monthly bar chart (no new API needed)
+
+### Milestone 2.5-D — Landing & Onboarding
+- [ ] Landing page: Fraunces hero, product screenshot block, social proof marquee strip
+- [ ] Onboarding: Fraunces headings; step 4 shows streak initialised to Day 1
+
+### Milestone 2.5-E — QA
+- [ ] Visual QA at 375px / 768px / 1280px
+- [ ] Full test suite passes (layout-only changes, no logic touched)
+- [ ] Lint + typecheck + build clean
+
+**Constraints:** No schema changes. No new API routes. No new packages except `next/font/google` (already built into Next.js).
+
+**Exit criteria:** Streak is visible from every authenticated screen. "Now Reading" books are one click from continuing a session. Full test suite passes. Lighthouse performance does not regress.
+
+---
+
 ## Phase 3 — Growth
 
 **Goal:** Increase retention and expand platform reach.
@@ -148,3 +183,4 @@
 | 2026-02-21 | Launch free tier first, gate later | Lower acquisition friction; validate retention before monetizing |
 | 2026-02-21 | Goodreads import is P0 | Users won't rebuild their library from scratch |
 | 2026-02-22 | Add page-level component tests alongside route integration tests | Integration tests covering the API in isolation missed two response-key mismatches in GoalsPage that caused goals to never display. Component tests that mock fetch close the API contract → consumer seam. |
+| 2026-02-22 | Phase 2.5 UX redesign before Phase 3 growth | Post-launch audit found the UI reads as generic SaaS. Young adult audience expects warmth and personality (cf. StoryGraph). Redesign is front-end only — no schema or API changes — so the cost is low and the conversion/retention upside is high before growth investment begins. |
