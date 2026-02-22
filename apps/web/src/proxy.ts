@@ -1,6 +1,8 @@
 import { createServerClient, type SetAllCookies } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const PROTECTED_PREFIXES = ['/dashboard', '/library', '/goals', '/books', '/billing', '/onboarding']
+
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -28,18 +30,18 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect all /dashboard routes — redirect to /login if not authenticated
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  const { pathname } = request.nextUrl
+
+  // Protect all app routes — redirect to /login if not authenticated
+  if (!user && PROTECTED_PREFIXES.some((p) => pathname.startsWith(p))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.searchParams.set('next', pathname)
     return NextResponse.redirect(url)
   }
 
   // Redirect authenticated users away from /login and /signup
-  if (
-    user &&
-    (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')
-  ) {
+  if (user && (pathname === '/login' || pathname === '/signup')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

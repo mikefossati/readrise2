@@ -10,13 +10,6 @@ import {
 } from '@/tests/integration/db-helpers'
 import { eq } from 'drizzle-orm'
 
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn().mockResolvedValue({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: { id: TEST_AUTH_ID } } }),
-    },
-  }),
-}))
 
 // Fix the system clock so durationSeconds is deterministic
 const SESSION_START = new Date('2024-06-15T10:00:00.000Z')

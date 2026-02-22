@@ -10,9 +10,11 @@ import { toast } from 'sonner'
 import type { GoogleBooksVolume } from '@readrise/types'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { UpgradeDialog } from '@/components/billing/upgrade-dialog'
 
 export function BookSearch() {
   const [open, setOpen] = useState(false)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<GoogleBooksVolume[]>([])
   const [searchError, setSearchError] = useState<string | null>(null)
@@ -82,6 +84,9 @@ export function BookSearch() {
         toast.success(`Added to ${shelf.replace('_', ' ')}`)
         handleOpenChange(false)
         router.refresh()
+      } else if (res.status === 409) {
+        handleOpenChange(false)
+        setUpgradeOpen(true)
       } else {
         toast.error('Failed to add book')
       }
@@ -89,6 +94,8 @@ export function BookSearch() {
   }
 
   return (
+    <>
+    <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} />
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm">
@@ -132,6 +139,7 @@ export function BookSearch() {
         </div>
       </DialogContent>
     </Dialog>
+    </>
   )
 }
 

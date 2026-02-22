@@ -97,7 +97,18 @@ export default async function LibraryPage() {
             {byShelf(value).length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-2 py-16 text-muted-foreground">
                 <BookOpen className="h-10 w-10" />
-                <p className="text-sm">No books here yet</p>
+                <p className="text-sm font-medium">
+                  {value === 'reading' && 'Nothing in progress yet'}
+                  {value === 'want_to_read' && 'Your reading queue is empty'}
+                  {value === 'finished' && 'No finished books yet'}
+                  {value === 'abandoned' && 'No abandoned books'}
+                </p>
+                <p className="text-xs">
+                  {value === 'reading' && 'Add a book and start a reading session to see it here.'}
+                  {value === 'want_to_read' && 'Search for books and add them to your queue.'}
+                  {value === 'finished' && 'Books you mark as finished will appear here.'}
+                  {value === 'abandoned' && "Books you've set aside will appear here."}
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">

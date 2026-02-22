@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db, books, userBooks } from '@readrise/db'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, count } from 'drizzle-orm'
 import { getAuthenticatedUser } from '@/lib/api-helpers'
 import { volumeToBookData } from '@/lib/google-books'
+import { getBookLimit } from '@/lib/features'
 import type { GoogleBooksVolume } from '@readrise/types'
 import { z } from 'zod'
 
@@ -37,6 +38,22 @@ const addBookSchema = z.object({
 export async function POST(request: Request) {
   const { dbUser, error } = await getAuthenticatedUser()
   if (error) return error
+
+  // Enforce per-tier book limit
+  const limit = getBookLimit(dbUser!.subscriptionTier)
+  if (limit !== null) {
+    const countResult = await db
+      .select({ value: count() })
+      .from(userBooks)
+      .where(eq(userBooks.userId, dbUser!.id))
+    const bookCount = countResult[0]?.value ?? 0
+    if (bookCount >= limit) {
+      return NextResponse.json(
+        { error: 'BOOK_LIMIT_REACHED', limit },
+        { status: 409 },
+      )
+    }
+  }
 
   const body = await request.json()
   const parsed = addBookSchema.safeParse(body)

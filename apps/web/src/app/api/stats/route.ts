@@ -72,7 +72,7 @@ export async function GET() {
 
   // Streak — count consecutive days with at least one session
   const sessionDays = await db
-    .selectDistinct({ day: sql<string>`date_trunc('day', started_at)::date::text` })
+    .selectDistinct({ day: sql<string>`date_trunc('day', reading_sessions.started_at)::date::text` })
     .from(readingSessions)
     .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
     .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.endedAt)))

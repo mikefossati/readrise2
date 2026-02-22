@@ -2,16 +2,22 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, BarChart2, Target, Library } from 'lucide-react'
+import { BookOpen, BarChart2, Target, Library, CreditCard, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { SubscriptionTier } from '@readrise/types'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: BarChart2 },
   { href: '/library', label: 'Library', icon: Library },
   { href: '/goals', label: 'Goals', icon: Target },
+  { href: '/billing', label: 'Billing', icon: CreditCard },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  subscriptionTier?: SubscriptionTier
+}
+
+export function Sidebar({ subscriptionTier = 'free' }: SidebarProps) {
   const pathname = usePathname()
 
   return (
@@ -29,11 +35,17 @@ export function Sidebar() {
               'flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
               pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
                 ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground'
+                : 'text-muted-foreground',
             )}
           >
             <Icon className="h-4 w-4" />
             {label}
+            {href === '/billing' && subscriptionTier === 'free' && (
+              <span className="ml-auto flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                <Zap className="h-2.5 w-2.5" />
+                Upgrade
+              </span>
+            )}
           </Link>
         ))}
       </nav>

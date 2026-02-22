@@ -1,4 +1,4 @@
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect } from 'vitest'
 import { GET, POST } from './route'
 import {
   TEST_AUTH_ID,
@@ -10,13 +10,6 @@ import {
 } from '@/tests/integration/db-helpers'
 import { eq } from 'drizzle-orm'
 
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn().mockResolvedValue({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: { id: TEST_AUTH_ID } } }),
-    },
-  }),
-}))
 
 function makeReq(method: string, body?: unknown): Request {
   return new Request('http://test/api/library', {
@@ -49,6 +42,33 @@ describe('POST /api/library', () => {
   test('invalid shelf value → 400', async () => {
     const res = await POST(makeReq('POST', { volume: mockVolume, shelf: 'invalid' }))
     expect(res.status).toBe(400)
+  })
+})
+
+describe('POST /api/library — book limit', () => {
+  test('free user at 50-book limit → 409 BOOK_LIMIT_REACHED', async () => {
+    const { users, userBooks: userBooksTable } = await import('@readrise/db')
+    const { eq: eqOp } = await import('drizzle-orm')
+    const [user] = await db.select().from(users).where(eqOp(users.authId, TEST_AUTH_ID))
+
+    // Bulk-insert 50 unique books and corresponding user_books
+    const booksData = Array.from({ length: 50 }, (_, i) => ({
+      googleBooksId: `limit-test-book-${i}`,
+      title: `Limit Book ${i}`,
+      authors: ['Test Author'],
+      genres: [],
+    }))
+    const inserted = await db.insert(books).values(booksData).returning()
+
+    await db.insert(userBooksTable).values(
+      inserted.map((b) => ({ userId: user!.id, bookId: b.id, shelf: 'want_to_read' as const })),
+    )
+
+    const res = await POST(makeReq('POST', { volume: mockVolume, shelf: 'want_to_read' }))
+    expect(res.status).toBe(409)
+    const body = await res.json()
+    expect(body.error).toBe('BOOK_LIMIT_REACHED')
+    expect(body.limit).toBe(50)
   })
 })
 

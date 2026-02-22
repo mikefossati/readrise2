@@ -17,6 +17,19 @@ if (globalThis.__db) {
 // Mock next/server Response helpers that aren't available in bare Node
 vi.mock('next/headers', () => ({ cookies: vi.fn() }))
 
+// Shared Supabase auth mock — returns the test user for all integration tests.
+// Centralised here to avoid the vi.mock hoisting issue that occurs when test
+// files reference imported constants inside a factory function.
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: vi.fn().mockResolvedValue({
+    auth: {
+      getUser: vi.fn().mockResolvedValue({
+        data: { user: { id: '00000000-0000-0000-0000-000000000001' } },
+      }),
+    },
+  }),
+}))
+
 import { truncateAll, seedTestUser } from './db-helpers'
 
 beforeEach(async () => {

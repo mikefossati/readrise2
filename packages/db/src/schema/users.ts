@@ -23,6 +23,7 @@ export const users = pgTable('users', {
   subscriptionTier: subscriptionTierEnum('subscription_tier').notNull().default('free'),
   subscriptionStatus: subscriptionStatusEnum('subscription_status').notNull().default('active'),
   stripeCustomerId: text('stripe_customer_id').unique(),
+  onboardingCompletedAt: timestamp('onboarding_completed_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })

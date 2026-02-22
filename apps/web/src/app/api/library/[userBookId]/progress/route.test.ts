@@ -1,4 +1,4 @@
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect } from 'vitest'
 import { POST } from './route'
 import {
   TEST_AUTH_ID,
@@ -11,13 +11,6 @@ import {
 } from '@/tests/integration/db-helpers'
 import { eq } from 'drizzle-orm'
 
-vi.mock('@/lib/supabase/server', () => ({
-  createClient: vi.fn().mockResolvedValue({
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: { id: TEST_AUTH_ID } } }),
-    },
-  }),
-}))
 
 async function setup(shelf: 'reading' | 'want_to_read' = 'reading') {
   const [user] = await db.select().from(users).where(eq(users.authId, TEST_AUTH_ID))
