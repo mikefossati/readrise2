@@ -40,7 +40,7 @@ export default function GoalsPage() {
         const goalsData = await goalsRes.json()
         const statsData = await statsRes.json()
 
-        const bookGoal = goalsData.goals?.find((g: Goal) => g.goalType === 'book_count') ?? null
+        const bookGoal = goalsData.data?.find((g: Goal) => g.goalType === 'book_count') ?? null
         setGoal(bookGoal)
         setTarget(bookGoal ? String(bookGoal.target) : '')
         setStats({ booksThisYear: statsData.booksThisYear ?? 0 })
@@ -68,7 +68,7 @@ export default function GoalsPage() {
       })
       if (!res.ok) throw new Error()
       const data = await res.json()
-      setGoal(data.goal)
+      setGoal(data.data)
       toast.success('Reading goal saved!')
     } catch {
       toast.error('Failed to save goal')
