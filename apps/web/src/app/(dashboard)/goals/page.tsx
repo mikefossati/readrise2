@@ -43,7 +43,7 @@ export default function GoalsPage() {
         const bookGoal = goalsData.data?.find((g: Goal) => g.goalType === 'book_count') ?? null
         setGoal(bookGoal)
         setTarget(bookGoal ? String(bookGoal.target) : '')
-        setStats({ booksThisYear: statsData.booksThisYear ?? 0 })
+        setStats({ booksThisYear: statsData.data?.booksReadThisYear ?? 0 })
       } catch {
         toast.error('Failed to load goal data')
       } finally {

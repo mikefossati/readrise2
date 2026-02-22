@@ -18,7 +18,7 @@ export default defineConfig({
         plugins: [tsconfigPaths(), react()],
         test: {
           name: 'components',
-          include: ['src/components/**/*.test.tsx'],
+          include: ['src/components/**/*.test.tsx', 'src/app/**/*.test.tsx'],
           environment: 'jsdom',
           setupFiles: ['src/tests/setup.ts'],
         },
