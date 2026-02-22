@@ -70,6 +70,20 @@ export async function GET() {
     .slice(0, 6)
     .map(([genre, count]) => ({ genre, count }))
 
+  // Books finished per month this year (for bar chart)
+  const monthlyRows = await db
+    .select({
+      month: sql<number>`extract(month from finished_at)::int`,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(userBooks)
+    .where(and(eq(userBooks.userId, userId), eq(userBooks.shelf, 'finished'), gte(userBooks.finishedAt, yearStart)))
+    .groupBy(sql`extract(month from finished_at)`)
+  const booksPerMonth: number[] = Array(12).fill(0)
+  for (const { month, count } of monthlyRows) {
+    if (month >= 1 && month <= 12) booksPerMonth[month - 1] = count
+  }
+
   // Streak — count consecutive days with at least one session
   const sessionDays = await db
     .selectDistinct({ day: sql<string>`date_trunc('day', reading_sessions.started_at)::date::text` })
@@ -89,6 +103,7 @@ export async function GET() {
       totalPagesThisYear: totalPagesThisYear ?? 0,
       totalHoursAllTime: Math.round((totalSecondsAllTime ?? 0) / 3600),
       averagePagesPerHour: avgPagesPerHour ? Math.round(avgPagesPerHour) : null,
+      booksPerMonth,
       genreBreakdown,
       streak: {
         currentStreak,

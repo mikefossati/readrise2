@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition, useEffect, useRef } from 'react'
+import type React from 'react'
 import { Search, Plus, Loader2 } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { UpgradeDialog } from '@/components/billing/upgrade-dialog'
 
-export function BookSearch() {
+export function BookSearch({ trigger }: { trigger?: React.ReactNode } = {}) {
   const [open, setOpen] = useState(false)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -98,9 +99,11 @@ export function BookSearch() {
     <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} />
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm">
-          <Plus className="mr-1 h-4 w-4" /> Add book
-        </Button>
+        {trigger ?? (
+          <Button size="sm">
+            <Plus className="mr-1 h-4 w-4" /> Add book
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>

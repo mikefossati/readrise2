@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BookOpen, BarChart2, Target, Library, CreditCard, Zap } from 'lucide-react'
+import { BookOpen, BarChart2, Target, Library, CreditCard, Flame } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { SubscriptionTier } from '@readrise/types'
 
@@ -15,40 +15,68 @@ const navItems = [
 
 interface SidebarProps {
   subscriptionTier?: SubscriptionTier
+  currentStreak?: number
 }
 
-export function Sidebar({ subscriptionTier = 'free' }: SidebarProps) {
+export function Sidebar({ subscriptionTier = 'free', currentStreak = 0 }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <aside className="flex h-full w-56 flex-col border-r bg-card px-3 py-4">
-      <Link href="/dashboard" className="mb-6 flex items-center gap-2 px-2">
+    <aside className="flex h-full w-16 shrink-0 flex-col items-center bg-[#1a1a2e] py-4">
+      {/* Logo */}
+      <Link
+        href="/dashboard"
+        className="mb-6 flex h-9 w-9 items-center justify-center rounded-lg text-white/80 transition-colors hover:text-white"
+        title="ReadRise"
+      >
         <BookOpen className="h-5 w-5" />
-        <span className="font-semibold tracking-tight">ReadRise</span>
       </Link>
-      <nav className="flex flex-1 flex-col gap-1">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              'flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
-              pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
-                ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground',
-            )}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-            {href === '/billing' && subscriptionTier === 'free' && (
-              <span className="ml-auto flex items-center gap-0.5 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
-                <Zap className="h-2.5 w-2.5" />
-                Upgrade
+
+      {/* Nav */}
+      <nav className="flex flex-1 flex-col items-center gap-1">
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+          return (
+            <div key={href} className="group relative">
+              <Link
+                href={href}
+                className={cn(
+                  'relative flex h-10 w-10 items-center justify-center rounded-lg transition-colors',
+                  isActive
+                    ? 'bg-white/10 text-white'
+                    : 'text-white/50 hover:bg-white/5 hover:text-white/80',
+                )}
+              >
+                {isActive && (
+                  <span className="absolute left-0 h-5 w-0.5 rounded-r-full bg-[#e8923a]" />
+                )}
+                <Icon className="h-5 w-5" />
+                {href === '/billing' && subscriptionTier === 'free' && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[#e8923a]" />
+                )}
+              </Link>
+              {/* Tooltip */}
+              <span className="pointer-events-none absolute left-full top-1/2 z-50 ml-3 -translate-y-1/2 whitespace-nowrap rounded-md bg-[#1a1a2e] px-2 py-1 text-xs font-medium text-white/90 opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity group-hover:opacity-100">
+                {label}
+                {href === '/billing' && subscriptionTier === 'free' && (
+                  <span className="ml-1.5 text-[#e8923a]">↑ Upgrade</span>
+                )}
               </span>
-            )}
-          </Link>
-        ))}
+            </div>
+          )
+        })}
       </nav>
+
+      {/* Streak counter */}
+      <div className="group relative mb-2 flex flex-col items-center gap-0.5">
+        <Flame className={cn('h-5 w-5', currentStreak > 0 ? 'text-[#e8923a]' : 'text-white/20')} />
+        <span className={cn('text-[11px] font-semibold tabular-nums', currentStreak > 0 ? 'text-[#e8923a]' : 'text-white/20')}>
+          {currentStreak}
+        </span>
+        <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-[#1a1a2e] px-2 py-1 text-xs font-medium text-white/90 opacity-0 shadow-lg ring-1 ring-white/10 transition-opacity group-hover:opacity-100">
+          {currentStreak > 0 ? `${currentStreak}-day streak` : 'No streak yet — start reading!'}
+        </span>
+      </div>
     </aside>
   )
 }

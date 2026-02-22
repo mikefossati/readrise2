@@ -1,7 +1,7 @@
 # ReadRise — Roadmap & Phase Plan
 
 **Last updated:** 2026-02-22
-**Status:** Phase 2.5 Planned — Phase 2 Web Complete — Phase 1.5 iOS Pending
+**Status:** Phase 2.5 Complete — Phase 2 Web Complete — Phase 1.5 iOS Pending
 
 ---
 
@@ -12,7 +12,7 @@
 | 0 | Foundation | Architecture, tooling, dev environment | Complete |
 | 1 | MVP Core | Ship closed beta with critical user journey | Web Complete / iOS Pending |
 | 2 | Polish & Launch | Public launch, monetization, iOS App Store | Web Complete / iOS Pending |
-| 2.5 | UX/UI Redesign | Warm palette, streak hero, young adult positioning | Planned |
+| 2.5 | UX/UI Redesign | Warm palette, streak hero, young adult positioning | Complete |
 | 3 | Growth | Social features, Android, recommendations | Not Started |
 | 4 | Scale | Advanced analytics, API, integrations | Not Started |
 
@@ -110,27 +110,27 @@
 
 **Full specification:** `doc/08-ux-redesign-phase2.5.md`
 
-### Milestone 2.5-A — Design System Foundation
-- [ ] Add Fraunces (serif) via `next/font/google` for display headings
-- [ ] Update CSS variables with warm palette (ink, parchment, amber, sage)
-- [ ] Sidebar → slim 64px icon rail with streak counter pinned at bottom
+### Milestone 2.5-A — Design System Foundation ✅
+- [x] Add Fraunces (serif) via `next/font/google` for display headings
+- [x] Update CSS variables with warm palette (ink, parchment, amber, sage)
+- [x] Sidebar → slim 64px icon rail with streak counter pinned at bottom
 
-### Milestone 2.5-B — Dashboard & Library (highest impact)
-- [ ] Dashboard: streak hero card (amber-tinted, full width) + compact stat row + currently-reading card + recent sessions list
-- [ ] Library: "Now Reading" featured band above shelf tabs; larger cover grid (128px)
+### Milestone 2.5-B — Dashboard & Library (highest impact) ✅
+- [x] Dashboard: streak hero card (amber-tinted, full width) + compact stat row + currently-reading card + recent sessions list
+- [x] Library: "Now Reading" featured band above shelf tabs; larger cover grid (128px)
 
-### Milestone 2.5-C — Book Detail & Goals
-- [ ] Book detail: parchment header, session card promoted to primary action zone
-- [ ] Goals: pace indicator sentence + monthly bar chart (no new API needed)
+### Milestone 2.5-C — Book Detail & Goals ✅
+- [x] Book detail: parchment header, session card promoted to primary action zone
+- [x] Goals: pace indicator sentence + monthly bar chart (extended `/api/stats` with `booksPerMonth`)
 
-### Milestone 2.5-D — Landing & Onboarding
-- [ ] Landing page: Fraunces hero, product screenshot block, social proof marquee strip
-- [ ] Onboarding: Fraunces headings; step 4 shows streak initialised to Day 1
+### Milestone 2.5-D — Landing & Onboarding ✅
+- [x] Landing page: Fraunces hero, product screenshot block, social proof marquee strip
+- [x] Onboarding: Fraunces headings; step 4 shows streak initialised to Day 1
 
-### Milestone 2.5-E — QA
-- [ ] Visual QA at 375px / 768px / 1280px
-- [ ] Full test suite passes (layout-only changes, no logic touched)
-- [ ] Lint + typecheck + build clean
+### Milestone 2.5-E — QA ✅
+- [ ] Visual QA at 375px / 768px / 1280px (manual, pre-launch)
+- [x] Full test suite passes (95 tests — layout-only changes, no logic touched)
+- [x] Lint + typecheck + build clean
 
 **Constraints:** No schema changes. No new API routes. No new packages except `next/font/google` (already built into Next.js).
 

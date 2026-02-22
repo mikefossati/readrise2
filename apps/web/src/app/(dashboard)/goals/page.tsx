@@ -19,7 +19,10 @@ interface Goal {
 
 interface Stats {
   booksThisYear: number
+  booksPerMonth: number[]
 }
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 export default function GoalsPage() {
   const thisYear = new Date().getFullYear()
@@ -43,7 +46,10 @@ export default function GoalsPage() {
         const bookGoal = goalsData.data?.find((g: Goal) => g.goalType === 'book_count') ?? null
         setGoal(bookGoal)
         setTarget(bookGoal ? String(bookGoal.target) : '')
-        setStats({ booksThisYear: statsData.data?.booksReadThisYear ?? 0 })
+        setStats({
+          booksThisYear: statsData.data?.booksReadThisYear ?? 0,
+          booksPerMonth: statsData.data?.booksPerMonth ?? Array(12).fill(0),
+        })
       } catch {
         toast.error('Failed to load goal data')
       } finally {
@@ -82,14 +88,26 @@ export default function GoalsPage() {
   const percent = goalTarget > 0 ? Math.min(Math.round((booksRead / goalTarget) * 100), 100) : 0
   const remaining = Math.max(goalTarget - booksRead, 0)
 
+  // Pace indicator
+  const currentMonth = new Date().getMonth() + 1 // 1-12
+  const monthsElapsed = currentMonth
+  const expectedByNow = goalTarget > 0 ? Math.round(goalTarget * (monthsElapsed / 12)) : 0
+  const onPace = goalTarget > 0 && booksRead >= expectedByNow
+  const projectedTotal = monthsElapsed > 0 && goalTarget > 0
+    ? Math.round((booksRead / monthsElapsed) * 12)
+    : 0
+
+  const booksPerMonth = stats?.booksPerMonth ?? Array(12).fill(0)
+  const maxMonthly = Math.max(...booksPerMonth, 1)
+
   if (loading) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold">Reading Goals</h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight">Reading Goals</h1>
           <p className="text-sm text-muted-foreground">Set and track your annual reading targets</p>
         </div>
-        <div className="h-40 animate-pulse rounded-lg bg-muted" />
+        <div className="h-40 animate-pulse rounded-xl bg-muted" />
       </div>
     )
   }
@@ -97,7 +115,7 @@ export default function GoalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Reading Goals</h1>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Reading Goals</h1>
         <p className="text-sm text-muted-foreground">Set and track your annual reading targets</p>
       </div>
 
@@ -106,7 +124,7 @@ export default function GoalsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5" />
+              <Target className="h-5 w-5 text-primary" />
               {thisYear} Book Goal
             </CardTitle>
             <CardDescription>
@@ -118,14 +136,24 @@ export default function GoalsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-end justify-between">
               <div>
-                <span className="text-4xl font-bold">{booksRead}</span>
+                <span className="font-display text-4xl font-bold">{booksRead}</span>
                 <span className="ml-1 text-lg text-muted-foreground">/ {goalTarget}</span>
               </div>
               <span className="text-2xl font-semibold text-muted-foreground">{percent}%</span>
             </div>
-            <Progress value={percent} className="h-3" />
+            <Progress value={percent} className="h-2.5" />
+
+            {/* Pace indicator */}
+            {goalTarget > 0 && percent < 100 && (
+              <p className="text-sm text-muted-foreground">
+                {onPace
+                  ? `On pace — projected to finish ${projectedTotal} books this year.`
+                  : `Behind pace — you need ${expectedByNow - booksRead} more book${expectedByNow - booksRead !== 1 ? 's' : ''} to be on track.`}
+              </p>
+            )}
+
             {percent === 100 && (
-              <div className="flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
+              <div className="flex items-center gap-2 rounded-lg bg-[#fef3e2] px-3 py-2 text-sm text-[#e8923a] dark:bg-[#3d3928]">
                 <Trophy className="h-4 w-4" />
                 Goal complete — you&apos;ve read {booksRead} books this year!
               </div>
@@ -142,6 +170,38 @@ export default function GoalsPage() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Monthly bar chart */}
+      {booksRead > 0 && (
+        <div>
+          <p className="mb-3 text-sm font-medium">Books finished by month</p>
+          <div className="flex h-24 items-end gap-1">
+            {booksPerMonth.map((count, i) => {
+              const isFuture = i + 1 > currentMonth
+              return (
+                <div key={i} className="group relative flex flex-1 flex-col items-center gap-1">
+                  <div
+                    className={`w-full rounded-t transition-colors ${
+                      isFuture
+                        ? 'bg-muted'
+                        : count > 0
+                        ? 'bg-primary'
+                        : 'bg-border'
+                    }`}
+                    style={{ height: `${Math.round((count / maxMonthly) * 80) + 4}px` }}
+                  />
+                  <span className="text-[10px] text-muted-foreground">{MONTHS[i]}</span>
+                  {count > 0 && (
+                    <span className="absolute -top-5 hidden rounded bg-foreground px-1 py-0.5 text-[10px] text-background group-hover:block">
+                      {count}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
       )}
 
       {/* Set / Update Goal */}

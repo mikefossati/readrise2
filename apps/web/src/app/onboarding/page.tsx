@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { BookOpen, ArrowRight, Loader2 } from 'lucide-react'
+import { BookOpen, ArrowRight, Loader2, Flame } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,11 +27,6 @@ export default function OnboardingPage() {
   const [libraryChoice, setLibraryChoice] = useState<'import' | 'search' | null>(null)
 
   useEffect(() => {
-    // Pre-populate the name from the server
-    fetch('/api/user/plan')
-      .then((r) => r.json())
-      .catch(() => null)
-    // Fetch display name from auth metadata via a lightweight endpoint
     fetch('/api/user/profile')
       .then((r) => r.json())
       .then(({ data }) => {
@@ -93,6 +88,8 @@ export default function OnboardingPage() {
     }
   }
 
+  const firstName = name?.split(' ')[0] || ''
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
       <Toaster richColors />
@@ -102,8 +99,8 @@ export default function OnboardingPage() {
         {STEPS.map((s, i) => (
           <div
             key={s}
-            className={`h-2 w-2 rounded-full transition-colors ${
-              STEPS.indexOf(step) >= i ? 'bg-foreground' : 'bg-muted'
+            className={`h-2 rounded-full transition-all ${
+              STEPS.indexOf(step) >= i ? 'w-6 bg-primary' : 'w-2 bg-muted'
             }`}
           />
         ))}
@@ -114,11 +111,13 @@ export default function OnboardingPage() {
         {step === 'welcome' && (
           <div className="space-y-6">
             <div className="flex items-center gap-2 justify-center">
-              <BookOpen className="h-7 w-7" />
-              <span className="text-2xl font-bold">ReadRise</span>
+              <BookOpen className="h-7 w-7 text-primary" />
+              <span className="font-display text-2xl font-bold">ReadRise</span>
             </div>
             <div className="text-center">
-              <h1 className="text-2xl font-bold">Welcome{name ? `, ${name}` : ''}!</h1>
+              <h1 className="font-display text-2xl font-bold">
+                Welcome{firstName ? `, ${firstName}` : ''}!
+              </h1>
               <p className="mt-2 text-muted-foreground">Let&apos;s set up your reading profile in 3 quick steps.</p>
             </div>
             <div className="space-y-2">
@@ -146,14 +145,14 @@ export default function OnboardingPage() {
         {step === 'library' && (
           <div className="space-y-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold">Start your library</h1>
+              <h1 className="font-display text-2xl font-bold">Start your library</h1>
               <p className="mt-2 text-muted-foreground">Add your first books — or skip and do it later.</p>
             </div>
 
             {!libraryChoice && (
               <div className="grid gap-3 sm:grid-cols-2">
                 <Card
-                  className="cursor-pointer hover:border-foreground transition-colors"
+                  className="cursor-pointer transition-colors hover:border-primary"
                   onClick={() => setLibraryChoice('import')}
                 >
                   <CardContent className="pt-6 text-center space-y-2">
@@ -162,7 +161,7 @@ export default function OnboardingPage() {
                   </CardContent>
                 </Card>
                 <Card
-                  className="cursor-pointer hover:border-foreground transition-colors"
+                  className="cursor-pointer transition-colors hover:border-primary"
                   onClick={() => setLibraryChoice('search')}
                 >
                   <CardContent className="pt-6 text-center space-y-2">
@@ -211,7 +210,7 @@ export default function OnboardingPage() {
         {step === 'goal' && (
           <div className="space-y-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold">Set a reading goal</h1>
+              <h1 className="font-display text-2xl font-bold">Set a reading goal</h1>
               <p className="mt-2 text-muted-foreground">
                 How many books do you want to read in {new Date().getFullYear()}?
               </p>
@@ -227,6 +226,19 @@ export default function OnboardingPage() {
                 onChange={(e) => setGoalTarget(e.target.value)}
                 placeholder="e.g. 24"
               />
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {[12, 24, 36, 52].map((n) => (
+                <Button
+                  key={n}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGoalTarget(String(n))}
+                  className={goalTarget === String(n) ? 'border-primary' : ''}
+                >
+                  {n} books
+                </Button>
+              ))}
             </div>
             <div className="flex gap-2">
               <Button
@@ -249,19 +261,25 @@ export default function OnboardingPage() {
           </div>
         )}
 
-        {/* Step 4: Done */}
+        {/* Step 4: Done — streak Day 1 */}
         {step === 'done' && (
           <div className="space-y-6 text-center">
-            <div className="text-5xl">🎉</div>
+            {/* Streak initialised */}
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#fef3e2] dark:bg-[#3d3928]">
+              <Flame className="h-10 w-10 text-[#e8923a]" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold">You&apos;re all set!</h1>
+              <p className="text-sm font-medium text-[#e8923a]">You&apos;re on a 1-day streak.</p>
+              <h1 className="mt-2 font-display text-2xl font-bold">
+                Your reading life starts today{firstName ? `, ${firstName}` : ''}.
+              </h1>
               <p className="mt-2 text-muted-foreground">
-                Your reading life starts now. Track sessions, log progress, and watch your stats grow.
+                Track sessions, log progress, and watch your streak grow.
               </p>
             </div>
             <Button className="w-full" size="lg" onClick={handleComplete} disabled={completing}>
               {completing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Go to my library
+              Go to my library →
             </Button>
           </div>
         )}

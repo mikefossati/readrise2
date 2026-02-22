@@ -3,14 +3,15 @@ import { db, userBooks, books, progressEntries, readingSessions, reviews, users 
 import { eq, and, desc } from 'drizzle-orm'
 import { redirect, notFound } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Separator } from '@/components/ui/separator'
+import { Progress } from '@/components/ui/progress'
 import { ProgressForm } from '@/components/reading/progress-form'
 import { SessionTimer } from '@/components/reading/session-timer'
 import { ReviewForm } from '@/components/reading/review-form'
 import { formatDate, formatDuration } from '@/lib/format'
 import { ShelfActions } from '@/components/books/shelf-actions'
+import { ChevronLeft } from 'lucide-react'
 
 export default async function BookDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: userBookId } = await params
@@ -58,124 +59,123 @@ export default async function BookDetailPage({ params }: { params: Promise<{ id:
     .where(eq(reviews.userBookId, userBookId))
     .limit(1)
 
+  const currentPage = latestProgress?.page ?? null
+  const percent = book.pageCount && currentPage ? Math.round((currentPage / book.pageCount) * 100) : null
+  const completedSessions = sessions.filter((s) => s.endedAt)
+
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      {/* Header */}
-      <div className="flex gap-4">
-        <div className="relative h-36 w-24 shrink-0 overflow-hidden rounded-md bg-muted shadow">
-          {book.coverUrl ? (
-            <Image src={book.coverUrl} alt={book.title} fill className="object-cover" sizes="96px" />
-          ) : (
-            <div className="flex h-full items-center justify-center text-xs text-muted-foreground p-2 text-center">
-              {book.title}
-            </div>
-          )}
-        </div>
-        <div className="min-w-0 flex-1 space-y-1">
-          <h1 className="text-xl font-bold leading-tight">{book.title}</h1>
-          {book.subtitle && <p className="text-sm text-muted-foreground">{book.subtitle}</p>}
-          <p className="text-sm text-muted-foreground">{book.authors.join(', ')}</p>
-          {book.pageCount && <p className="text-xs text-muted-foreground">{book.pageCount} pages</p>}
-          <div className="flex flex-wrap gap-1 pt-1">
-            <Badge variant="secondary">{ub.shelf.replace('_', ' ')}</Badge>
-            <Badge variant="outline">{ub.format}</Badge>
-            {book.genres.slice(0, 2).map((g) => (
-              <Badge key={g} variant="outline" className="text-xs">{g}</Badge>
-            ))}
+    <div className="mx-auto max-w-2xl space-y-5">
+      {/* Back link */}
+      <Link href="/library" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground">
+        <ChevronLeft className="h-4 w-4" /> Library
+      </Link>
+
+      {/* Book header — parchment background */}
+      <div className="-mx-4 rounded-xl bg-[#f0ebe0] px-5 py-5 dark:bg-[#252538] sm:mx-0">
+        <div className="flex gap-5">
+          <div className="relative h-44 w-[116px] shrink-0 overflow-hidden rounded-lg bg-muted shadow-md">
+            {book.coverUrl ? (
+              <Image src={book.coverUrl} alt={book.title} fill className="object-cover" sizes="116px" />
+            ) : (
+              <div className="flex h-full items-center justify-center p-2 text-center text-xs text-muted-foreground">
+                {book.title}
+              </div>
+            )}
           </div>
-          <div className="pt-1">
-            <ShelfActions userBookId={userBookId} currentShelf={ub.shelf} />
+          <div className="min-w-0 flex-1 space-y-2">
+            <h1 className="font-display text-xl font-bold leading-tight">{book.title}</h1>
+            {book.subtitle && <p className="text-sm text-muted-foreground">{book.subtitle}</p>}
+            <p className="text-sm text-muted-foreground">{book.authors.join(', ')}</p>
+            <p className="text-xs text-muted-foreground">
+              {[book.pageCount ? `${book.pageCount} pages` : null, book.genres[0]].filter(Boolean).join(' · ')}
+            </p>
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              <ShelfActions userBookId={userBookId} currentShelf={ub.shelf} />
+            </div>
+            <div className="flex flex-wrap gap-1 pt-0.5">
+              <Badge variant="outline" className="text-xs">{ub.format}</Badge>
+              {book.genres.slice(0, 2).map((g) => (
+                <Badge key={g} variant="outline" className="text-xs">{g}</Badge>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      <Separator />
+      {/* Session timer — amber-tinted, primary action zone */}
+      {ub.shelf !== 'abandoned' && (
+        <div className="rounded-xl bg-[#fef3e2] px-5 py-4 dark:bg-[#3d3928]">
+          <SessionTimer
+            userBookId={userBookId}
+            currentPage={currentPage}
+            activeSessionId={activeSession?.id ?? null}
+            activeSessionStart={activeSession?.startedAt?.toISOString() ?? null}
+          />
+        </div>
+      )}
 
       {/* Progress */}
       {ub.shelf !== 'finished' && ub.shelf !== 'abandoned' && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Progress</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ProgressForm
-              userBookId={userBookId}
-              pageCount={book.pageCount}
-              currentPage={latestProgress?.page ?? null}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Session timer */}
-      {ub.shelf !== 'abandoned' && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Reading session</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SessionTimer
-              userBookId={userBookId}
-              currentPage={latestProgress?.page ?? null}
-              activeSessionId={activeSession?.id ?? null}
-              activeSessionStart={activeSession?.startedAt?.toISOString() ?? null}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Recent sessions */}
-      {sessions.filter((s) => s.endedAt).length > 0 && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Session history</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {sessions.filter((s) => s.endedAt).map((s) => (
-                <div key={s.id} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{formatDate(s.startedAt.toISOString())}</span>
-                  <span>{formatDuration(s.durationSeconds)}</span>
-                  {s.pagesRead != null && (
-                    <span className="text-muted-foreground">{s.pagesRead} pages</span>
-                  )}
-                  {s.pagesPerHour != null && (
-                    <span className="text-muted-foreground">{Math.round(s.pagesPerHour)} p/hr</span>
-                  )}
-                </div>
-              ))}
+        <div className="space-y-3">
+          {percent != null && (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Progress</span>
+                <span>{currentPage && book.pageCount ? `p. ${currentPage} / ${book.pageCount}` : `${percent}%`}</span>
+              </div>
+              <Progress value={percent} className="h-2" />
             </div>
-          </CardContent>
-        </Card>
+          )}
+          <ProgressForm
+            userBookId={userBookId}
+            pageCount={book.pageCount}
+            currentPage={currentPage}
+          />
+        </div>
       )}
 
-      {/* Review */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Rating & notes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ReviewForm
-            userBookId={userBookId}
-            initialRating={review?.rating ?? null}
-            initialBody={review?.body ?? null}
-          />
-        </CardContent>
-      </Card>
+      {/* Session history */}
+      {completedSessions.length > 0 && (
+        <div>
+          <p className="mb-3 text-sm font-medium">Session history</p>
+          <div className="space-y-1">
+            {completedSessions.map((s) => (
+              <div key={s.id} className="flex items-center justify-between rounded-lg px-3 py-2 text-sm even:bg-muted/50">
+                <span className="text-muted-foreground">{formatDate(s.startedAt.toISOString())}</span>
+                <span>{formatDuration(s.durationSeconds)}</span>
+                {s.pagesRead != null && (
+                  <span className="text-muted-foreground">{s.pagesRead} pages</span>
+                )}
+                {s.pagesPerHour != null && (
+                  <span className="text-muted-foreground">{Math.round(s.pagesPerHour)} p/hr</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Metadata */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-1 text-sm">
-          {ub.startedAt && <p><span className="text-muted-foreground">Started:</span> {formatDate(ub.startedAt)}</p>}
-          {ub.finishedAt && <p><span className="text-muted-foreground">Finished:</span> {formatDate(ub.finishedAt)}</p>}
-          {book.publisher && <p><span className="text-muted-foreground">Publisher:</span> {book.publisher}</p>}
-          {book.publishedDate && <p><span className="text-muted-foreground">Published:</span> {book.publishedDate}</p>}
-          {book.language && <p><span className="text-muted-foreground">Language:</span> {book.language.toUpperCase()}</p>}
-        </CardContent>
-      </Card>
+      {/* Rating & notes */}
+      <div>
+        <p className="mb-3 text-sm font-medium">Rating & notes</p>
+        <ReviewForm
+          userBookId={userBookId}
+          initialRating={review?.rating ?? null}
+          initialBody={review?.body ?? null}
+        />
+      </div>
+
+      {/* Details */}
+      {(ub.startedAt || ub.finishedAt || book.publisher || book.publishedDate || book.language) && (
+        <div className="space-y-1 text-sm text-muted-foreground">
+          <p className="font-medium text-foreground">Details</p>
+          {ub.startedAt && <p>Started: {formatDate(ub.startedAt)}</p>}
+          {ub.finishedAt && <p>Finished: {formatDate(ub.finishedAt)}</p>}
+          {book.publisher && <p>Publisher: {book.publisher}</p>}
+          {book.publishedDate && <p>Published: {book.publishedDate}</p>}
+          {book.language && <p>Language: {book.language.toUpperCase()}</p>}
+        </div>
+      )}
     </div>
   )
 }
