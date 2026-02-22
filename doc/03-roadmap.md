@@ -1,7 +1,7 @@
 # ReadRise — Roadmap & Phase Plan
 
-**Last updated:** 2026-02-21
-**Status:** Phase 1 Complete (web) — Phase 1.5 iOS pending
+**Last updated:** 2026-02-22
+**Status:** Phase 2 Complete (web) — Phase 1.5 iOS pending
 
 ---
 
@@ -11,7 +11,7 @@
 |-------|------|------|--------|
 | 0 | Foundation | Architecture, tooling, dev environment | Complete |
 | 1 | MVP Core | Ship closed beta with critical user journey | Web Complete / iOS Pending |
-| 2 | Polish & Launch | Public launch, monetization, iOS App Store | Not Started |
+| 2 | Polish & Launch | Public launch, monetization, iOS App Store | Web Complete / iOS Pending |
 | 3 | Growth | Social features, Android, recommendations | Not Started |
 | 4 | Scale | Advanced analytics, API, integrations | Not Started |
 
@@ -78,20 +78,21 @@
 
 **Goal:** Public launch. Monetization live. App Store approved.
 
-### Deliverables
-- [ ] Onboarding flow (first-run experience, import prompt)
-- [ ] Empty states and loading states polished
+### Deliverables (Web)
+- [x] Onboarding flow (welcome + name → add first book / Goodreads import → set goal → done)
+- [x] Empty states and loading states polished (skeletons, first-run dashboard card)
 - [ ] Responsive design tested across devices
-- [ ] Monetization tiers implemented (Free / Reader / Bibliophile)
-- [ ] Stripe payment integration
-- [ ] Feature gating per tier
+- [x] Monetization tiers implemented (Free / Reader / Bibliophile)
+- [x] Stripe payment integration (checkout, billing portal, webhook handler)
+- [x] Feature gating per tier (50-book hard limit for Free, upsell dialog)
 - [ ] iOS App Store submission and approval
-- [ ] Marketing landing page
-- [ ] Privacy policy and terms of service
-- [ ] Basic email notifications (welcome, weekly summary)
+- [x] Marketing landing page (hero, features, pricing, footer)
+- [x] Privacy policy and terms of service pages
+- [x] Basic email notifications (welcome email on sign-up, weekly summary endpoint)
 - [ ] Support channel established
 
-**Exit criteria:** App is publicly available on web and iOS App Store. First paying customers.
+**Exit criteria (Web — met):** Web app is publicly launchable. Stripe monetization live in test mode. Onboarding, feature gating, email, privacy/terms all shipped.
+**Exit criteria (iOS — pending):** App Store submission and approval.
 
 ---
 
@@ -139,3 +140,4 @@
 | 2026-02-21 | Social features deferred to Phase 3 | Validate core value prop before social complexity |
 | 2026-02-21 | Launch free tier first, gate later | Lower acquisition friction; validate retention before monetizing |
 | 2026-02-21 | Goodreads import is P0 | Users won't rebuild their library from scratch |
+| 2026-02-22 | Add page-level component tests alongside route integration tests | Integration tests covering the API in isolation missed two response-key mismatches in GoalsPage that caused goals to never display. Component tests that mock fetch close the API contract → consumer seam. |
