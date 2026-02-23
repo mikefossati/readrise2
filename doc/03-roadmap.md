@@ -1,6 +1,6 @@
 # ReadRise — Roadmap & Phase Plan
 
-**Last updated:** 2026-02-22
+**Last updated:** 2026-02-23
 **Status:** Phase 2.5 Complete — Phase 2 Web Complete — Phase 1.5 iOS Pending
 
 ---
@@ -128,7 +128,7 @@
 - [x] Onboarding: Fraunces headings; step 4 shows streak initialised to Day 1
 
 ### Milestone 2.5-E — QA ✅
-- [ ] Visual QA at 375px / 768px / 1280px (manual, pre-launch)
+- [x] Visual QA at 375px / 768px / 1280px (manual, pre-launch)
 - [x] Full test suite passes (95 tests — layout-only changes, no logic touched)
 - [x] Lint + typecheck + build clean
 
