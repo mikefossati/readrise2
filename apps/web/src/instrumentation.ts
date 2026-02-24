@@ -21,10 +21,8 @@ export async function register() {
  * Server Actions — these would otherwise silently disappear in production.
  */
 export const onRequestError = async (
-  error: unknown,
-  request: { path: string; method: string },
-  context: { routeType: string }
+  ...args: Parameters<Awaited<typeof import('@sentry/nextjs')>['captureRequestError']>
 ) => {
   const { captureRequestError } = await import('@sentry/nextjs')
-  captureRequestError(error, request, context)
+  captureRequestError(...args)
 }
