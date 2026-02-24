@@ -1,9 +1,11 @@
 import { createServerClient, type SetAllCookies } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { logger } from '@/lib/logger'
 
 const PROTECTED_PREFIXES = ['/dashboard', '/library', '/goals', '/books', '/billing', '/onboarding']
 
 export async function proxy(request: NextRequest) {
+  const start = Date.now()
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -37,6 +39,13 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     url.searchParams.set('next', pathname)
+    logger.info('request', {
+      method: request.method,
+      path: pathname,
+      authed: false,
+      action: 'redirect:/login',
+      duration: Date.now() - start,
+    })
     return NextResponse.redirect(url)
   }
 
@@ -44,8 +53,23 @@ export async function proxy(request: NextRequest) {
   if (user && (pathname === '/login' || pathname === '/signup')) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
+    logger.info('request', {
+      method: request.method,
+      path: pathname,
+      authed: true,
+      action: 'redirect:/dashboard',
+      duration: Date.now() - start,
+    })
     return NextResponse.redirect(url)
   }
+
+  logger.debug('request', {
+    method: request.method,
+    path: pathname,
+    authed: !!user,
+    action: 'pass',
+    duration: Date.now() - start,
+  })
 
   return supabaseResponse
 }
