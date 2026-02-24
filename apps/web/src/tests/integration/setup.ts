@@ -14,8 +14,14 @@ if (globalThis.__db) {
   globalThis.__db = undefined
 }
 
-// Mock next/server Response helpers that aren't available in bare Node
-vi.mock('next/headers', () => ({ cookies: vi.fn() }))
+// Mock next/server Response helpers that aren't available in bare Node.
+// `headers` must be included because api-helpers.ts calls it to check
+// the Authorization header. Return no auth header so integration tests
+// always fall through to the cookie-based Supabase mock below.
+vi.mock('next/headers', () => ({
+  cookies: vi.fn(),
+  headers: vi.fn().mockResolvedValue({ get: vi.fn().mockReturnValue(null) }),
+}))
 
 // Shared Supabase auth mock — returns the test user for all integration tests.
 // Centralised here to avoid the vi.mock hoisting issue that occurs when test
