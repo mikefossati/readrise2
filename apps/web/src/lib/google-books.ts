@@ -2,7 +2,14 @@ import type { GoogleBooksVolume } from '@readrise/types'
 
 const BASE_URL = 'https://www.googleapis.com/books/v1'
 
+const _searchCache = new Map<string, { results: GoogleBooksVolume[]; at: number }>()
+const SEARCH_TTL = 60 * 60 * 1000 // 1 hour
+
 export async function searchBooks(query: string, maxResults = 10): Promise<GoogleBooksVolume[]> {
+  const key = `${query}:${maxResults}`
+  const hit = _searchCache.get(key)
+  if (hit && Date.now() - hit.at < SEARCH_TTL) return hit.results
+
   const params = new URLSearchParams({
     q: query,
     maxResults: String(maxResults),
@@ -18,7 +25,9 @@ export async function searchBooks(query: string, maxResults = 10): Promise<Googl
   }
 
   const data = await res.json()
-  return (data.items ?? []) as GoogleBooksVolume[]
+  const results = (data.items ?? []) as GoogleBooksVolume[]
+  _searchCache.set(key, { results, at: Date.now() })
+  return results
 }
 
 export async function getVolumeById(id: string): Promise<GoogleBooksVolume | null> {

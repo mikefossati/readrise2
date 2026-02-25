@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, afterEach } from 'vitest'
-import { volumeToBookData, getVolumeById } from './google-books'
+import { volumeToBookData, getVolumeById, searchBooks } from './google-books'
 import type { GoogleBooksVolume } from '@readrise/types'
 
 const fullVolume: GoogleBooksVolume = {
@@ -106,5 +106,43 @@ describe('getVolumeById', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
     const result = await getVolumeById('bad-id')
     expect(result).toBeNull()
+  })
+})
+
+describe('searchBooks — in-memory TTL cache', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.useRealTimers()
+  })
+
+  test('cache hit — fetch called only once for repeated identical query', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ items: [fullVolume] }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    await searchBooks('unique-cache-test-query-hit')
+    await searchBooks('unique-cache-test-query-hit')
+
+    expect(mockFetch).toHaveBeenCalledTimes(1)
+  })
+
+  test('cache miss after TTL expires — fetch called again', async () => {
+    vi.useFakeTimers()
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ items: [fullVolume] }),
+    })
+    vi.stubGlobal('fetch', mockFetch)
+
+    await searchBooks('unique-cache-test-query-ttl')
+
+    // Advance past the 1-hour TTL
+    vi.advanceTimersByTime(61 * 60 * 1000)
+
+    await searchBooks('unique-cache-test-query-ttl')
+
+    expect(mockFetch).toHaveBeenCalledTimes(2)
   })
 })
