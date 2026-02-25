@@ -3,9 +3,7 @@ import { UserMenu } from '@/components/layout/user-menu'
 import { Toaster } from '@/components/ui/sonner'
 import { getAuthenticatedUser } from '@/lib/api-helpers'
 import { redirect } from 'next/navigation'
-import { db, readingSessions, userBooks } from '@readrise/db'
-import { eq, isNotNull, and, sql } from 'drizzle-orm'
-import { calculateStreak } from '@/lib/streak'
+import { getStreak } from '@/lib/queries/streak'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { dbUser, error } = await getAuthenticatedUser()
@@ -16,18 +14,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/onboarding')
   }
 
-  let currentStreak = 0
-  if (dbUser) {
-    const sessionDays = await db
-      .selectDistinct({ day: sql<string>`date_trunc('day', reading_sessions.started_at)::date::text` })
-      .from(readingSessions)
-      .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
-      .where(and(eq(userBooks.userId, dbUser.id), isNotNull(readingSessions.endedAt)))
-      .orderBy(sql`1 desc`)
-      .limit(365)
-    const days = sessionDays.map((r) => r.day).filter(Boolean) as string[]
-    currentStreak = calculateStreak(days).currentStreak
-  }
+  const currentStreak = dbUser ? await getStreak(dbUser.id) : 0
 
   return (
     <div className="flex h-screen overflow-hidden">

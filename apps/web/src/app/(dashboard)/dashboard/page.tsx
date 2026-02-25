@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import Image from 'next/image'
 import { formatDuration } from '@/lib/format'
-import { calculateStreak } from '@/lib/streak'
+import { getStreak } from '@/lib/queries/streak'
 
 async function getDashboardData(userId: string) {
   const thisYear = new Date().getFullYear()
@@ -83,17 +83,6 @@ async function getDashboardData(userId: string) {
     .orderBy(desc(readingSessions.startedAt))
     .limit(3)
 
-  // Streak
-  const sessionDays = await db
-    .selectDistinct({ day: sql<string>`date_trunc('day', reading_sessions.started_at)::date::text` })
-    .from(readingSessions)
-    .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
-    .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.endedAt)))
-    .orderBy(sql`1 desc`)
-    .limit(365)
-  const days = sessionDays.map((r) => r.day).filter(Boolean) as string[]
-  const { currentStreak } = calculateStreak(days)
-
   return {
     booksThisYear: booksRow?.count ?? 0,
     totalPages: pagesRow?.total ?? 0,
@@ -104,7 +93,6 @@ async function getDashboardData(userId: string) {
       ? { ub: readingRow.user_books, book: readingRow.books, currentPage }
       : null,
     recentSessions,
-    currentStreak,
   }
 }
 
@@ -116,7 +104,10 @@ export default async function DashboardPage() {
   const [dbUser] = await db.select().from(users).where(eq(users.authId, authUser.id)).limit(1)
   if (!dbUser) redirect('/login')
 
-  const data = await getDashboardData(dbUser.id)
+  const [data, currentStreak] = await Promise.all([
+    getDashboardData(dbUser.id),
+    getStreak(dbUser.id),
+  ])
   const goalPercent = data.goal
     ? Math.min(Math.round((data.booksThisYear / data.goal.target) * 100), 100)
     : null
@@ -145,15 +136,15 @@ export default async function DashboardPage() {
       <div className="rounded-xl bg-[#fef3e2] px-5 py-4 dark:bg-[#3d3928]">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Flame className={`h-7 w-7 shrink-0 ${data.currentStreak > 0 ? 'text-[#e8923a]' : 'text-muted-foreground'}`} />
+            <Flame className={`h-7 w-7 shrink-0 ${currentStreak > 0 ? 'text-[#e8923a]' : 'text-muted-foreground'}`} />
             <div>
               <p className="font-display text-xl font-bold">
-                {data.currentStreak > 0
-                  ? `${data.currentStreak}-day streak`
+                {currentStreak > 0
+                  ? `${currentStreak}-day streak`
                   : 'Start your streak'}
               </p>
               <p className="text-sm text-muted-foreground">
-                {data.currentStreak > 0
+                {currentStreak > 0
                   ? 'Keep it going — log a session today.'
                   : 'Read today to start a streak.'}
               </p>
