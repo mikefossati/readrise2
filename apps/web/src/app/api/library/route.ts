@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { db, books, userBooks } from '@readrise/db'
 import { eq, and, count } from 'drizzle-orm'
 import { getAuthenticatedUser } from '@/lib/api-helpers'
-import { volumeToBookData } from '@/lib/google-books'
+import { volumeToBookData, getVolumeById } from '@/lib/google-books'
 import { getBookLimit } from '@/lib/features'
 import type { GoogleBooksVolume } from '@readrise/types'
 import { z } from 'zod'
@@ -31,11 +31,20 @@ export async function GET(request: Request) {
   return NextResponse.json({ data: rows.map((r) => ({ ...r.user_books, book: r.books })) })
 }
 
-const addBookSchema = z.object({
-  volume: z.object({ id: z.string() }).passthrough(),
-  shelf: z.enum(['reading', 'want_to_read', 'finished', 'abandoned']),
-  format: z.enum(['physical', 'ebook', 'audiobook']).default('physical'),
-})
+// Web clients send a full `volume` object; iOS sends `volume_id` (snake_case
+// from JSONEncoder.keyEncodingStrategy = .convertToSnakeCase). Both are valid.
+const addBookSchema = z.union([
+  z.object({
+    volume: z.object({ id: z.string() }).passthrough(),
+    shelf: z.enum(['reading', 'want_to_read', 'finished', 'abandoned']),
+    format: z.enum(['physical', 'ebook', 'audiobook']).default('physical'),
+  }),
+  z.object({
+    volume_id: z.string(),
+    shelf: z.enum(['reading', 'want_to_read', 'finished', 'abandoned']),
+    format: z.enum(['physical', 'ebook', 'audiobook']).default('physical'),
+  }),
+])
 
 // POST /api/library — add a book to the user's library
 export async function POST(request: Request) {
@@ -62,8 +71,16 @@ export async function POST(request: Request) {
   const parsed = addBookSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 
-  const { volume, shelf, format } = parsed.data
-  const bookData = volumeToBookData(volume as unknown as GoogleBooksVolume)
+  const { shelf, format } = parsed.data
+  let googleVolume: GoogleBooksVolume
+  if ('volume' in parsed.data) {
+    googleVolume = parsed.data.volume as unknown as GoogleBooksVolume
+  } else {
+    const fetched = await getVolumeById(parsed.data.volume_id)
+    if (!fetched) return NextResponse.json({ error: 'Book not found on Google Books' }, { status: 404 })
+    googleVolume = fetched
+  }
+  const bookData = volumeToBookData(googleVolume)
 
   // Upsert the canonical book record
   const insertedBook = await db

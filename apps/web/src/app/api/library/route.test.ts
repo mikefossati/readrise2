@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, vi, afterEach } from 'vitest'
 import { GET, POST } from './route'
 import {
   TEST_AUTH_ID,
@@ -36,7 +36,27 @@ describe('POST /api/library', () => {
     expect(rows).toHaveLength(1)
   })
 
-  test('missing volume → 400', async () => {
+  test('volume_id (iOS snake_case) → fetches from Google Books → 201', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(mockVolume) }),
+    )
+    const res = await POST(makeReq('POST', { volume_id: mockVolume.id, shelf: 'reading' }))
+    expect(res.status).toBe(201)
+    const { data } = await res.json()
+    expect(data.shelf).toBe('reading')
+    expect(data.book.title).toBe(mockVolume.volumeInfo.title)
+    vi.unstubAllGlobals()
+  })
+
+  test('volume_id not found on Google Books → 404', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
+    const res = await POST(makeReq('POST', { volume_id: 'bad-id', shelf: 'reading' }))
+    expect(res.status).toBe(404)
+    vi.unstubAllGlobals()
+  })
+
+  test('missing volume and volume_id → 400', async () => {
     const res = await POST(makeReq('POST', { shelf: 'want_to_read' }))
     expect(res.status).toBe(400)
   })
