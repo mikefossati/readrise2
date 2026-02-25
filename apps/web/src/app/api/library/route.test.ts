@@ -25,6 +25,8 @@ describe('POST /api/library', () => {
     expect(res.status).toBe(201)
     const { data } = await res.json()
     expect(data.shelf).toBe('want_to_read')
+    expect(data.book).toBeDefined()
+    expect(data.book.title).toBe(mockVolume.volumeInfo.title)
   })
 
   test('same googleBooksId added twice → only one book row in DB', async () => {
@@ -84,7 +86,8 @@ describe('GET /api/library', () => {
     expect(res.status).toBe(200)
     const { data } = await res.json()
     expect(data).toHaveLength(1)
-    expect(data[0].books.id).toBe(book.id)
+    expect(data[0]!.shelf).toBe('reading')
+    expect(data[0]!.book.id).toBe(book.id)
   })
 
   test('shelf filter returns only matching shelf', async () => {

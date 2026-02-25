@@ -25,7 +25,10 @@ export async function GET(request: Request) {
     .where(and(...conditions))
     .orderBy(userBooks.updatedAt)
 
-  return NextResponse.json({ data: rows })
+  // Flatten join rows into { ...userBook, book } so API consumers (iOS app,
+  // future clients) get a consistent shape with a nested `book` object rather
+  // than the raw Drizzle { user_books, books } join tuple.
+  return NextResponse.json({ data: rows.map((r) => ({ ...r.user_books, book: r.books })) })
 }
 
 const addBookSchema = z.object({
@@ -97,7 +100,7 @@ export async function POST(request: Request) {
       .set({ shelf, format, updatedAt: new Date() })
       .where(eq(userBooks.id, latest!.id))
       .returning()
-    return NextResponse.json({ data: updated }, { status: 200 })
+    return NextResponse.json({ data: { ...updated, book } }, { status: 200 })
   }
 
   const [userBook] = await db
@@ -105,5 +108,5 @@ export async function POST(request: Request) {
     .values({ userId: dbUser!.id, bookId: book.id, shelf, format, rereadNumber })
     .returning()
 
-  return NextResponse.json({ data: userBook }, { status: 201 })
+  return NextResponse.json({ data: { ...userBook, book } }, { status: 201 })
 }
