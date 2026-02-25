@@ -9,11 +9,14 @@ function createClient() {
     throw new Error('DATABASE_URL environment variable is not set')
   }
 
-  // postgres-js with connection pooling params for Supabase
+  // Supabase connection pooler (pgbouncer) in transaction mode:
+  // - max: 1 per serverless invocation — the pooler manages the real pool
+  // - prepare: false — pgbouncer transaction mode doesn't support prepared statements
   const sql = postgres(connectionString, {
-    max: 10,
+    max: 1,
     idle_timeout: 20,
     connect_timeout: 10,
+    prepare: false,
   })
 
   return drizzle(sql, { schema })
