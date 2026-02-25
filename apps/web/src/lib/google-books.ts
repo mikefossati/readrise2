@@ -21,6 +21,15 @@ export async function searchBooks(query: string, maxResults = 10): Promise<Googl
   return (data.items ?? []) as GoogleBooksVolume[]
 }
 
+export async function getVolumeById(id: string): Promise<GoogleBooksVolume | null> {
+  const params = new URLSearchParams()
+  if (process.env.GOOGLE_BOOKS_API_KEY) params.set('key', process.env.GOOGLE_BOOKS_API_KEY)
+  const qs = params.size ? `?${params}` : ''
+  const res = await fetch(`${BASE_URL}/volumes/${id}${qs}`, { next: { revalidate: 86400 } })
+  if (!res.ok) return null
+  return res.json()
+}
+
 export async function getBookByIsbn(isbn: string): Promise<GoogleBooksVolume | null> {
   const params = new URLSearchParams({
     q: `isbn:${isbn}`,

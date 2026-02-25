@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest'
-import { volumeToBookData } from './google-books'
+import { describe, test, expect, vi, afterEach } from 'vitest'
+import { volumeToBookData, getVolumeById } from './google-books'
 import type { GoogleBooksVolume } from '@readrise/types'
 
 const fullVolume: GoogleBooksVolume = {
@@ -87,5 +87,24 @@ describe('volumeToBookData', () => {
   test('prefers ISBN_13 over ISBN_10 when both present', () => {
     const result = volumeToBookData(fullVolume)
     expect(result.isbn13).toBe('9780132350884')
+  })
+})
+
+describe('getVolumeById', () => {
+  afterEach(() => vi.unstubAllGlobals())
+
+  test('returns the volume when fetch succeeds', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(fullVolume) }),
+    )
+    const result = await getVolumeById('abc123')
+    expect(result).toEqual(fullVolume)
+  })
+
+  test('returns null when fetch responds with a non-ok status', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }))
+    const result = await getVolumeById('bad-id')
+    expect(result).toBeNull()
   })
 })
