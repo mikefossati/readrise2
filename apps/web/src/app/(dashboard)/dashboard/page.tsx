@@ -15,44 +15,68 @@ async function getDashboardData(userId: string) {
   const thisYear = new Date().getFullYear()
   const yearStart = `${thisYear}-01-01`
 
-  const [booksRow] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(userBooks)
-    .where(and(eq(userBooks.userId, userId), eq(userBooks.shelf, 'finished'), gte(userBooks.finishedAt, yearStart)))
+  // Run all independent queries in parallel
+  const [
+    [booksRow],
+    [pagesRow],
+    [hoursRow],
+    [speedRow],
+    [goal],
+    [readingRow],
+    recentSessions,
+  ] = await Promise.all([
+    db.select({ count: sql<number>`count(*)::int` })
+      .from(userBooks)
+      .where(and(eq(userBooks.userId, userId), eq(userBooks.shelf, 'finished'), gte(userBooks.finishedAt, yearStart))),
 
-  const [pagesRow] = await db
-    .select({ total: sql<number>`coalesce(sum(pages_read), 0)::int` })
-    .from(readingSessions)
-    .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
-    .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.pagesRead)))
+    db.select({ total: sql<number>`coalesce(sum(pages_read), 0)::int` })
+      .from(readingSessions)
+      .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
+      .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.pagesRead))),
 
-  const [hoursRow] = await db
-    .select({ total: sql<number>`coalesce(sum(duration_seconds), 0)::int` })
-    .from(readingSessions)
-    .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
-    .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.durationSeconds)))
+    db.select({ total: sql<number>`coalesce(sum(duration_seconds), 0)::int` })
+      .from(readingSessions)
+      .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
+      .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.durationSeconds))),
 
-  const [speedRow] = await db
-    .select({ avg: sql<number>`round(avg(pages_per_hour))::int` })
-    .from(readingSessions)
-    .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
-    .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.pagesPerHour)))
+    db.select({ avg: sql<number>`round(avg(pages_per_hour))::int` })
+      .from(readingSessions)
+      .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
+      .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.pagesPerHour))),
 
-  const [goal] = await db
-    .select()
-    .from(userGoals)
-    .where(and(eq(userGoals.userId, userId), eq(userGoals.year, thisYear), eq(userGoals.goalType, 'book_count')))
-    .limit(1)
+    db.select()
+      .from(userGoals)
+      .where(and(eq(userGoals.userId, userId), eq(userGoals.year, thisYear), eq(userGoals.goalType, 'book_count')))
+      .limit(1),
 
-  // Currently reading — most recently updated
-  const [readingRow] = await db
-    .select()
-    .from(userBooks)
-    .innerJoin(books, eq(userBooks.bookId, books.id))
-    .where(and(eq(userBooks.userId, userId), eq(userBooks.shelf, 'reading')))
-    .orderBy(desc(userBooks.updatedAt))
-    .limit(1)
+    // Currently reading — most recently updated
+    db.select()
+      .from(userBooks)
+      .innerJoin(books, eq(userBooks.bookId, books.id))
+      .where(and(eq(userBooks.userId, userId), eq(userBooks.shelf, 'reading')))
+      .orderBy(desc(userBooks.updatedAt))
+      .limit(1),
 
+    // Recent sessions (last 3 completed)
+    db.select({
+        id: readingSessions.id,
+        startedAt: readingSessions.startedAt,
+        durationSeconds: readingSessions.durationSeconds,
+        pagesRead: readingSessions.pagesRead,
+        pagesPerHour: readingSessions.pagesPerHour,
+        bookTitle: books.title,
+        bookCoverUrl: books.coverUrl,
+        userBookId: userBooks.id,
+      })
+      .from(readingSessions)
+      .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
+      .innerJoin(books, eq(userBooks.bookId, books.id))
+      .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.endedAt)))
+      .orderBy(desc(readingSessions.startedAt))
+      .limit(3),
+  ])
+
+  // currentPage depends on readingRow so runs after
   let currentPage: number | null = null
   if (readingRow) {
     const [entry] = await db
@@ -63,25 +87,6 @@ async function getDashboardData(userId: string) {
       .limit(1)
     currentPage = entry?.page ?? null
   }
-
-  // Recent sessions (last 3 completed)
-  const recentSessions = await db
-    .select({
-      id: readingSessions.id,
-      startedAt: readingSessions.startedAt,
-      durationSeconds: readingSessions.durationSeconds,
-      pagesRead: readingSessions.pagesRead,
-      pagesPerHour: readingSessions.pagesPerHour,
-      bookTitle: books.title,
-      bookCoverUrl: books.coverUrl,
-      userBookId: userBooks.id,
-    })
-    .from(readingSessions)
-    .innerJoin(userBooks, eq(readingSessions.userBookId, userBooks.id))
-    .innerJoin(books, eq(userBooks.bookId, books.id))
-    .where(and(eq(userBooks.userId, userId), isNotNull(readingSessions.endedAt)))
-    .orderBy(desc(readingSessions.startedAt))
-    .limit(3)
 
   return {
     booksThisYear: booksRow?.count ?? 0,
