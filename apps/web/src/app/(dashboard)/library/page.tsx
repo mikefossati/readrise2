@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { db, userBooks, books, progressEntries, reviews } from '@readrise/db'
-import { eq, desc } from 'drizzle-orm'
-import { users } from '@readrise/db'
+import { db, users } from '@readrise/db'
+import { eq } from 'drizzle-orm'
+import { getLibrary } from '@/lib/queries/library'
 import { redirect } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { BookCard } from '@/components/books/book-card'
@@ -17,48 +17,6 @@ const TAB_SHELVES = [
   { value: 'finished', label: 'Finished' },
   { value: 'abandoned', label: 'Abandoned' },
 ] as const
-
-async function getLibrary(userId: string) {
-  const rows = await db
-    .select()
-    .from(userBooks)
-    .innerJoin(books, eq(userBooks.bookId, books.id))
-    .where(eq(userBooks.userId, userId))
-    .orderBy(desc(userBooks.updatedAt))
-
-  // Get latest page for reading books
-  const readingIds = rows
-    .filter((r) => r.user_books.shelf === 'reading')
-    .map((r) => r.user_books.id)
-
-  const latestProgress: Record<string, number> = {}
-  for (const ubId of readingIds) {
-    const [entry] = await db
-      .select()
-      .from(progressEntries)
-      .where(eq(progressEntries.userBookId, ubId))
-      .orderBy(desc(progressEntries.loggedAt))
-      .limit(1)
-    if (entry) latestProgress[ubId] = entry.page
-  }
-
-  // Get ratings for finished books
-  const finishedIds = rows
-    .filter((r) => r.user_books.shelf === 'finished')
-    .map((r) => r.user_books.id)
-
-  const ratings: Record<string, number> = {}
-  for (const ubId of finishedIds) {
-    const [review] = await db
-      .select()
-      .from(reviews)
-      .where(eq(reviews.userBookId, ubId))
-      .limit(1)
-    if (review) ratings[ubId] = review.rating
-  }
-
-  return { rows, latestProgress, ratings }
-}
 
 export default async function LibraryPage() {
   const supabase = await createClient()

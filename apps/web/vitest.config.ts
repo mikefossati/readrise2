@@ -11,6 +11,7 @@ export default defineConfig({
         test: {
           name: 'unit',
           include: ['src/lib/**/*.test.ts'],
+          exclude: ['src/lib/queries/**/*.test.ts'],
           environment: 'node',
         },
       },
@@ -27,7 +28,7 @@ export default defineConfig({
         plugins: [tsconfigPaths()],
         test: {
           name: 'integration',
-          include: ['src/app/api/**/*.test.ts'],
+          include: ['src/app/api/**/*.test.ts', 'src/lib/queries/**/*.test.ts'],
           environment: 'node',
           setupFiles: ['src/tests/integration/setup.ts'],
           fileParallelism: false,
