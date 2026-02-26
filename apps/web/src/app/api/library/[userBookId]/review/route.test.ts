@@ -53,6 +53,17 @@ describe('PUT /api/library/[userBookId]/review', () => {
     expect(rows).toHaveLength(1)
   })
 
+  test('body: null is accepted (iOS JSONEncoder sends null for missing body)', async () => {
+    const { ub } = await setup()
+    const res = await PUT(makeReq({ rating: 4, body: null }), {
+      params: Promise.resolve({ userBookId: ub.id }),
+    })
+    expect(res.status).toBe(200)
+    const { data } = await res.json()
+    expect(data.rating).toBe(4)
+    expect(data.body).toBeNull()
+  })
+
   test('rating below 1 returns 400', async () => {
     const { ub } = await setup()
     const res = await PUT(makeReq({ rating: 0.5 }), {

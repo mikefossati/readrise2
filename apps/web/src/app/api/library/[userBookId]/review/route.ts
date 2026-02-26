@@ -21,7 +21,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ userBoo
 
 const reviewSchema = z.object({
   rating: z.number().min(1).max(5).multipleOf(0.5),
-  body: z.string().max(5000).optional(),
+  body: z.string().max(5000).nullish(),
 })
 
 // PUT /api/library/[userBookId]/review — upsert
